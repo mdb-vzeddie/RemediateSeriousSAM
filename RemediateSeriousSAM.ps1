@@ -32,7 +32,11 @@ try {
                 Write-Warning "[!] Your Machine is Vulnerable to the SeriousSAM and HiveNightmare vulnerability - Apply permissions changes and delete VSS copies?" -WarningAction Inquire 
             }
             icacls c:\windows\system32\config\*.* /inheritance:e
-            vssadmin delete shadows /All /Quiet
+            Get-WmiObject Win32_Shadowcopy | ForEach-Object {
+                Write-Host "Deleting VSS " $_.ID.ToLower()
+                $cmd = "delete shadows /shadow=" + $_.ID.ToLower() + " /quiet"
+                Start-Process -FilePath $env:SystemRoot\system32\vssadmin.exe -ArgumentList $cmd -Wait
+            }
             Write-Output "[+] Your computer is now remediated" | Rcv-Output -ForegroundColor Green
         } 
         catch { 
